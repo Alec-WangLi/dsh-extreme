@@ -369,7 +369,17 @@ export async function runAudit({ patches = ALL_PATCHES, trees, dshHome, surface 
   };
 }
 
-function mdReport(out) {
+// Exit gate: any tree with a failing verdict makes the whole audit exit 1.
+// Kept in sync with the FAILING list used by mdReport — if a verdict can
+// make the audit fail, it MUST be listed here, and vice versa.
+const FAILING = ["drifted", "restructured", "missing-in-tree", "unmatched", "unreadable"];
+
+export function auditIsBad(trees) {
+  return (trees || []).some((t) =>
+    FAILING.some((k) => (t.summary?.[k] ?? 0) > 0));
+}
+
+export function mdReport(out) {
   const lines = [];
   const now = new Date().toISOString();
   lines.push(`# dsh-purge anchor drift audit — ${now}`);
@@ -386,9 +396,9 @@ function mdReport(out) {
     if (t.summary.driftedIds.length) lines.push(`drifted/restructured patch ids: ${t.summary.driftedIds.join(", ")}`);
     if (t.summary.missingInTreeKeys.length) lines.push(`missing-in-tree targets: ${t.summary.missingInTreeKeys.join(", ")}`);
     lines.push("");
-    const FAILING = ["drifted", "restructured", "missing-in-tree", "unmatched", "unreadable"];
+    const FAILING_ROWS = FAILING;
     for (const e of t.entries) {
-      if (!FAILING.includes(e.verdict)) continue;
+      if (!FAILING_ROWS.includes(e.verdict)) continue;
       lines.push(`### #${e.id} ${e.name} [${e.verdict}] key=${e.key}`);
       if (e.path) lines.push(`- path: ${e.path}`);
       if (e.patterns) {
@@ -405,6 +415,18 @@ function mdReport(out) {
       lines.push(`#### justified (skipped with reasons): ${justifiedRows.length} row(s)`);
       for (const e of justifiedRows) {
         lines.push(`- #${e.id} ${e.name} [${e.verdict}] key=${e.key} — ${e.reason || ""}`);
+      }
+      lines.push("");
+    }
+    // Informational rows (na-surface and anything else outside pass/fail/justified)
+    // are listed individually — never folded into a bare "other | N" count.
+    const PASSING = ["matched", "applied", "out-of-tree", "skipped"];
+    const infoRows = t.entries.filter((e) =>
+      !PASSING.includes(e.verdict) && !FAILING.includes(e.verdict) && !JUSTIFIED.includes(e.verdict));
+    if (infoRows.length) {
+      lines.push(`#### other (informational, not gating): ${infoRows.length} row(s)`);
+      for (const e of infoRows) {
+        lines.push(`- #${e.id} ${e.name} [${e.verdict}] key=${e.key || "-"} — ${e.reason || ""}`);
       }
       lines.push("");
     }
@@ -455,7 +477,7 @@ export function main(argv = process.argv.slice(2)) {
       console.error(`[${t.id}] drifted=${t.summary.drifted} restructured=${t.summary.restructured} missing-in-tree=${t.summary["missing-in-tree"]}`);
     }
     if (out.diff) console.error(`diff: newDrifted=[${out.diff.newDriftedIds}] newMissing=[${out.diff.newMissingKeys}]`);
-    const bad = out.trees.some((t) => t.summary.drifted > 0 || t.summary.restructured > 0 || t.summary["missing-in-tree"] > 0);
+    const bad = auditIsBad(out.trees);
     process.exitCode = bad ? 1 : 0;
   }).catch((e) => {
     console.error(e && e.stack ? e.stack : String(e));
@@ -467,7 +489,7 @@ function usage(code) {
   process.stderr.write([
     "usage: node scripts/drift-audit.mjs --tree <id>=<appRoot> [--tree <id>=<appRoot>]",
     "  [--dsh-home <path>] [--out-json <file>] [--out-md <file>]",
-    "exit 0 = clean (no drifted/restructured/missing-in-tree), 1 = findings, 2 = bad args",
+    "exit 0 = clean (no drifted/restructured/missing-in-tree/unmatched/unreadable), 1 = findings, 2 = bad args",
   ].join("\n") + "\n");
   process.exitCode = code;
   return Promise.resolve();

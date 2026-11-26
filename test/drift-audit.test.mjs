@@ -7,7 +7,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { ALL_PATCHES } from "../lib/core.js";
-import { runAudit, rawReplacements, classifyChained } from "../scripts/drift-audit.mjs";
+import { runAudit, rawReplacements, classifyChained, auditIsBad, mdReport } from "../scripts/drift-audit.mjs";
 
 const patch = (id) => {
   const found = ALL_PATCHES.find((p) => p.id === id);
@@ -257,4 +257,39 @@ test("layout-absent: nested key downgraded without nested root; uniform absence 
     fs.rmSync(a, { recursive: true, force: true });
     fs.rmSync(b, { recursive: true, force: true });
   }
+});
+
+test("auditIsBad: drifted/restructured/missing-in-tree/unmatched/unreadable all gate exit 1; clean summary passes", () => {
+  const clean = { drifted: 0, restructured: 0, "missing-in-tree": 0, unmatched: 0, unreadable: 0 };
+  assert.equal(auditIsBad([{ summary: { ...clean } }]), false);
+  for (const k of ["drifted", "restructured", "missing-in-tree", "unmatched", "unreadable"]) {
+    assert.equal(auditIsBad([{ summary: { ...clean, [k]: 1 } }]), true, `${k} must gate exit 1`);
+  }
+  // 多树任一坏即坏
+  assert.equal(
+    auditIsBad([{ summary: { ...clean } }, { summary: { ...clean, unreadable: 2 } }]),
+    true,
+    "any failing tree fails the audit"
+  );
+});
+
+test("mdReport: na-surface and other informational rows are listed individually with reasons, not folded away", () => {
+  const out = {
+    trees: [{
+      id: "t", root: "X:\\fake", version: "0.2.2-rc.5",
+      summary: {
+        matched: 0, applied: 0, drifted: 0, restructured: 0, chained: 0,
+        "out-of-tree": 0, "missing-in-tree": 0, "layout-absent": 0,
+        skipped: 0, unmatched: 0, unreadable: 0, other: 1,
+        driftedIds: [], missingInTreeKeys: [],
+      },
+      entries: [{
+        id: 999, name: "FAKE_NA_PATCH", layer: "fake", key: "", path: "",
+        verdict: "na-surface", report: "na", reason: "patch-level status",
+      }],
+    }],
+  };
+  const md = mdReport(out);
+  assert.ok(md.includes("FAKE_NA_PATCH"), "informational rows must be listed in the md report");
+  assert.ok(md.includes("patch-level status"), "row reason is included");
 });
