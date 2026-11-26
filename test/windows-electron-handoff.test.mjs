@@ -152,7 +152,7 @@ test('concurrent state readers see complete JSON through archive lock retries an
   const helper = path.join(root, 'helper.ps1');
   fs.writeFileSync(helper, WINDOWS_ASAR_HANDOFF_PS1, 'utf8');
   const fixture = fileURLToPath(new URL('./fixtures/windows-handoff-state-reader.ps1', import.meta.url));
-  const stdout = execFileSync('powershell.exe', ['-NoProfile', '-File', fixture, '-Helper', helper],
+  const stdout = execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', fixture, '-Helper', helper],
     { encoding: 'utf8', timeout: 40000 });
   const result = JSON.parse(stdout);
   assert.ok(result.reads >= 3);
