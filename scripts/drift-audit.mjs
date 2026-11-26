@@ -52,6 +52,56 @@ export function rawReplacements(p) {
   return (p.patterns ?? []).map((pat) => ({ pattern: pat, replace: p.replace }));
 }
 
+/**
+ * Justified-drift layer 1: chained / self-upgrade anchors.
+ * A drifted row whose pattern anchors on text another patch PRODUCES (or a
+ * dshPurge* identifier another patch owns) can never match a pristine host —
+ * the producer has to apply first. Evidence, not assertion:
+ * - declared: p.chainedAfter names the producer (patch table contract).
+ * - replace:  the whole pattern text (whitespace-normalized) is contained in
+ *             another patch's replace output.
+ * - fragment: a dshPurge* identifier from p's pattern appears in another
+ *             patch's replace output or pattern (upgrade alternation).
+ * Returns {via, producerId, patternIndex?} or null. Pure function over the
+ * patch table — never reads the host tree.
+ */
+export function classifyChained(p, patches) {
+  if (p.chainedAfter != null) {
+    const dep = patches.find((q) => q.id === p.chainedAfter);
+    if (dep) return { via: "declared", producerId: p.chainedAfter };
+  }
+  const strip = (s) => String(s).replace(/\s+/g, "");
+  const reps = rawReplacements(p);
+  for (let i = 0; i < reps.length; i += 1) {
+    const pattern = reps[i] && reps[i].pattern;
+    if (!pattern || pattern instanceof RegExp) continue;
+    const text = asLf(pattern);
+    if (!text.trim()) continue;
+    const ids = text.match(/dshPurge[A-Za-z0-9_]+/g) || [];
+    for (const q of patches) {
+      if (q.id === p.id) continue;
+      for (const r of rawReplacements(q)) {
+        const repText = r && r.replace != null ? asLf(String(r.replace)) : "";
+        if (repText && strip(repText).includes(strip(text))) {
+          return { via: "replace", producerId: q.id, patternIndex: i };
+        }
+        const patText = r && r.pattern == null ? "" : r.pattern instanceof RegExp ? String(r.pattern.source) : asLf(r.pattern);
+        for (const id of ids) {
+          if ((repText && repText.includes(id)) || (patText && patText.includes(id))) {
+            return { via: "fragment", producerId: q.id, patternIndex: i };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** Justified-drift layer 2: layout-absent targets. */
+function nestedRootOf(aiBase) {
+  return path.join(String(aiBase), "dsh", "node_modules", "@deepseek-ai");
+}
+
 function anchorHead(pattern) {
   if (pattern instanceof RegExp) {
     return String(pattern.source).replace(/\\[ \\t]\*/g, "").replace(/\\n/g, " ⏎ ").slice(0, 200);
@@ -168,11 +218,21 @@ function buildEntries({ patches, root, aiBase, dshHome, report }) {
           });
           continue;
         }
-        const { verdict, hint } = rowVerdict(row, p);
+        const { verdict: rawVerdict, hint } = rowVerdict(row, p);
+        let verdict = rawVerdict;
+        let reason;
+        if (verdict === "drifted" || verdict === "restructured") {
+          const chain = classifyChained(p, patches);
+          if (chain) {
+            verdict = "chained";
+            reason = `pattern anchors on state produced by #${chain.producerId} (${chain.via}); absent on pristine by design`;
+          }
+        }
         const base = {
           id: p.id, name: p.name, layer: p.layer, key, path: row.path,
-          verdict, report: row.status,
+          verdict, report: row.status, raw: rawVerdict,
         };
+        if (reason) base.reason = reason;
         if (verdict === "drifted" || verdict === "restructured") base.hint = hint;
         if (verdict === "matched" || verdict === "drifted" || verdict === "restructured") {
           const patterns = patternEvidence(p, row.path);
@@ -187,11 +247,27 @@ function buildEntries({ patches, root, aiBase, dshHome, report }) {
       if (emittedKeys.has(key) || rowsByKey.has(key)) continue;
       const fps = pathsOf(files, key);
       if (fps.length > 0) continue; // rows exist — handled above (or legacy rows)
+      if (PROFILE_ONLY_KEYS.has(key)) {
+        entries.push({
+          id: p.id, name: p.name, layer: p.layer, key, path: "",
+          verdict: "out-of-tree", report: "missing_file", reason: "profile-scope target",
+        });
+        continue;
+      }
+      // npm-nested-only keys: layout-absent by upstream design when the nested
+      // root does not exist in THIS tree (desktop layout never has it).
+      if (key.endsWith("-nested") && !fs.existsSync(nestedRootOf(aiBase))) {
+        entries.push({
+          id: p.id, name: p.name, layer: p.layer, key, path: "",
+          verdict: "layout-absent", report: "missing_file",
+          reason: "npm-nested layout only; nested root absent in this tree",
+        });
+        continue;
+      }
       entries.push({
         id: p.id, name: p.name, layer: p.layer, key, path: "",
-        verdict: PROFILE_ONLY_KEYS.has(key) ? "out-of-tree" : "missing-in-tree",
-        report: "missing_file",
-        reason: PROFILE_ONLY_KEYS.has(key) ? "profile-scope target" : "tree-scope target absent",
+        verdict: "missing-in-tree", report: "missing_file",
+        reason: "tree-scope target absent",
       });
     }
     // Patch-level statuses with no detail rows at all (surface-na, disabled, unknown).
@@ -211,8 +287,9 @@ function buildEntries({ patches, root, aiBase, dshHome, report }) {
 
 function summarize(entries) {
   const summary = {
-    matched: 0, applied: 0, drifted: 0, restructured: 0, "out-of-tree": 0,
-    "missing-in-tree": 0, skipped: 0, unmatched: 0, unreadable: 0, other: 0,
+    matched: 0, applied: 0, drifted: 0, restructured: 0, chained: 0,
+    "out-of-tree": 0, "missing-in-tree": 0, "layout-absent": 0,
+    skipped: 0, unmatched: 0, unreadable: 0, other: 0,
     driftedIds: [], missingInTreeKeys: [],
   };
   for (const e of entries) {
@@ -264,9 +341,28 @@ export async function runAudit({ patches = ALL_PATCHES, trees, dshHome, surface 
     const entries = buildEntries({ patches, root: tree.root, aiBase, dshHome, report });
     results.push({
       id: tree.id, root: tree.root, version: readHostVersion(tree.root),
-      entries, summary: summarize(entries),
+      entries,
     });
   }
+  // Justified-drift layer 2b: a key missing in EVERY audited tree (baseline
+  // included) is not a candidate-tree regression — uniform absence is a host
+  // layout fact, not anchor drift. Single-tree audits keep the strict verdict.
+  if (results.length >= 2) {
+    const missingRows = results.map((t) => t.entries.filter((e) => e.verdict === "missing-in-tree"));
+    for (const row of missingRows[0]) {
+      const uniform = missingRows.every((rows) => rows.some((e) => e.id === row.id && e.key === row.key));
+      if (!uniform) continue;
+      for (const rows of missingRows) {
+        for (const e of rows) {
+          if (e.id === row.id && e.key === row.key) {
+            e.verdict = "layout-absent";
+            e.reason = `absent across all ${results.length} audited trees (incl. baseline); not a candidate-tree regression`;
+          }
+        }
+      }
+    }
+  }
+  for (const t of results) t.summary = summarize(t.entries);
   return {
     trees: results,
     diff: results.length === 2 ? diffTrees(results[0], results[1]) : null,
@@ -290,8 +386,9 @@ function mdReport(out) {
     if (t.summary.driftedIds.length) lines.push(`drifted/restructured patch ids: ${t.summary.driftedIds.join(", ")}`);
     if (t.summary.missingInTreeKeys.length) lines.push(`missing-in-tree targets: ${t.summary.missingInTreeKeys.join(", ")}`);
     lines.push("");
+    const FAILING = ["drifted", "restructured", "missing-in-tree", "unmatched", "unreadable"];
     for (const e of t.entries) {
-      if (!["drifted", "restructured", "missing-in-tree", "unmatched", "unreadable"].includes(e.verdict)) continue;
+      if (!FAILING.includes(e.verdict)) continue;
       lines.push(`### #${e.id} ${e.name} [${e.verdict}] key=${e.key}`);
       if (e.path) lines.push(`- path: ${e.path}`);
       if (e.patterns) {
@@ -300,6 +397,15 @@ function mdReport(out) {
         }
       }
       if (e.hint) lines.push(`- hint: line ${e.hint.line}, tokens ${e.hint.tokens.join("/")}\n\n  \`\`\`\n  ${e.hint.snippet.replace(/\n/g, "\n  ")}\n  \`\`\``);
+      lines.push("");
+    }
+    const JUSTIFIED = ["chained", "layout-absent"];
+    const justifiedRows = t.entries.filter((e) => JUSTIFIED.includes(e.verdict));
+    if (justifiedRows.length) {
+      lines.push(`#### justified (skipped with reasons): ${justifiedRows.length} row(s)`);
+      for (const e of justifiedRows) {
+        lines.push(`- #${e.id} ${e.name} [${e.verdict}] key=${e.key} — ${e.reason || ""}`);
+      }
       lines.push("");
     }
   }
