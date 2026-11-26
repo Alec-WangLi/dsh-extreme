@@ -1,7 +1,7 @@
-# AGENTS.md — 给 AI agent 的 Purge 使用说明书
+# AGENTS.md — 给 AI agent 的 DSH-Extreme 使用说明书
 
 > 写给**在 DSH 里干活的 agent**，不是营销文档。
-> 当前版本：**1.7.21** · 适配 DSH Desktop **0.2.2-rc.5**（0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 同样通过）
+> 当前版本：**1.7.22** · 适配 DSH Desktop **0.2.2-rc.5**（0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 同样通过）
 > 版本号由 `npm run check:docs` 与 `package.json` 校验，发版必须同步；历史版本与 PR 记录在 [maintenance-archive](docs/maintenance-archive.md)，不要再写回本文件。
 
 ---
@@ -10,7 +10,7 @@
 
 ## 0. 30 秒版本
 
-- 这个插件（`dsh-purge-community`）把 DSH 里**拦你的东西**拆掉：审批弹窗、沙箱拒绝、fs 围栏、工具结果修剪、计划模式硬拦、`ask_user_question` 等待、以及模型自己的拒绝倾向。
+- 这个插件（`dsh-extreme`，旧名 `dsh-purge-community` / `dsh-purge` 保留为迁移别名）把 DSH 里**拦你的东西**拆掉：审批弹窗、沙箱拒绝、fs 围栏、工具结果修剪、计划模式硬拦、`ask_user_question` 等待、以及模型自己的拒绝倾向。
 - 你不需要"绕过"它——**它就是替你拆闸的**。看到"我不能/建议你先确认"这类输出，多半不是插件失效，而是模型层的问题，按 §5 排查。
 - 你的操作入口只有两个：**面板（左侧栏 Purge）** 和 **CLI（`purge-community`）**。别手改 `~/Library/.../Resources/app` 下的宿主文件，改了会被下一次「应用」覆盖。
 
@@ -18,7 +18,7 @@
 
 | 层 | 由谁提供 | 生效方式 | 你能怎么查 |
 | --- | --- | --- | --- |
-| **宿主补丁**（86 条） | 本插件写进 DSH 源码 | 点「应用」写入 → **退出重开**才加载 | `selfcheck` 看各层 `applied/required` |
+| **宿主补丁**（89 条） | 本插件写进 DSH 源码 | 点「应用」写入 → **退出重开**才加载 | `selfcheck` 看各层 `applied/required` |
 | **提示词注入** | 插件运行时（每步重贴） | `prompt-inject.md` 作为 `dsh-purge` section | 探针（§4）或 `selfcheck` 的「运行时提示词注入」 |
 | **破甲强化段** | 插件运行时 | 尾部 section（默认开） | `purge-community boost` |
 | **权限配置** | 宿主 profile 和会话自己的权限选择 | 新装默认沿用宿主策略，旧宿主可能保留先前写入的补丁 | `selfcheck` 的「当前 profile 的权限选择」 |
@@ -28,7 +28,7 @@
 
 ## 2. 生命周期：装 → 应用 → 重开
 
-装（官方插件界面/市场，或社区安装器备份迁移）→ 点「应用」（解包 host / 写 86 条补丁 / 建快照）→ 退出并重开 DSH（**补丁只有重启后才被加载**）→ `selfcheck` 全绿 = 可以开工。
+装（官方插件界面/市场，或社区安装器备份迁移）→ 点「应用」（解包 host / 写 89 条补丁 / 建快照）→ 退出并重开 DSH（**补丁只有重启后才被加载**）→ `selfcheck` 全绿 = 可以开工。
 **什么时候要再点一次「应用」**：DSH 官方更新后（`app.asar` 会重新出现，旧补丁全部失效）、插件自身升级后、新装带工具面/预设的插件后、模型开始推脱或工具突然被追问审批时。
 「应用」是幂等的：不确定就点它，然后退出重开。安装、应用、加载是三个不同阶段——安装不自动应用或重启，应用会备份并写盘，当前进程不热重载这些模块。
 
@@ -83,9 +83,9 @@ purge-community probe new
 | `$DSH_HOME/prompt-inject.md` | **用户的注入正文**，插件只读不改（除非用户点保存） |
 **不变量**：`prompt-inject.md`、规则集、其他插件配置，任何时候都不该被「应用」或「回滚」覆盖。
 
-## 7. 补丁表：86 条，怎么读、怎么加
+## 7. 补丁表：89 条，怎么读、怎么加
 
-- 定义在 `lib/core.js` 的 `ALL_PATCHES`（`PATCHES` / `CODE_PATCHES` / `ENGINE_PATCHES` / `NEW_TOOL_PATCHES`）。
+- 定义在 `lib/patches/index.mjs` 聚合的 `ALL_PATCHES`（`PATCHES` / `CODE_PATCHES` / `ENGINE_PATCHES` / `NEW_TOOL_PATCHES` / `OPT_IN_PATCHES` / `STABILITY_PATCHES`）。
 - 每条 = `{id, name, layer, file, replacements:[{pattern, replace}], markers, optional?}`；`pattern` 是对宿主源码的**精确片段**（或正则），`markers` 用来判断"已应用"。
 - 新增一条：在 `targetFiles()` 登记目标文件键 → `replace` 里留 `[dsh-purge]` 标记并写进 `markers` → 在 `test/patch-anchors.test.mjs` 钉一份真实源码片段 → 第三方插件目标用 `optional: true`（不在场时显示"不适用"而不是失败）。
 - 宿主升级后锚点漂移：`diagnose` 给出文件、行号、旧锚点首行与**可能的新落点**；确认后 `reanchor apply <id> --lines A-B`（先看 dry-run 再加 `--yes`），覆盖存 `anchor-overrides.json`，`reanchor clear <id>` 撤销。
@@ -102,9 +102,9 @@ purge-community probe new
 
 | 组件 | 值 |
 | --- | --- |
-| 插件 | `dsh-purge-community` 1.7.21 |
+| 插件 | `dsh-extreme` 1.7.22 |
 | 已验证宿主 | DSH Desktop 0.2.2-rc.5 / 0.2.2-rc.3 / 0.2.2-rc.2 / 0.2.2-rc.1 / 0.2.1-rc.1 / 0.2.1-rc.2 / 0.2.1-rc.3 / 0.2.1-rc.5 |
-| 0.2.2-rc.5 | 官方 rc.3/rc.5 双树离线审计：88 条补丁逐行等价、零新增漂移（`docs/drift-2026-11-26.md`），锚点无需改动；live 真机验收待升级当天按 runbook 复测。 |
+| 0.2.2-rc.5 | 官方 rc.3/rc.5 双树离线审计：88 条存量补丁逐行等价、零新增漂移，新增 #97 改名迁移锚不改变该结论（`docs/drift-2026-11-26.md`）；live 真机验收待升级当天按 runbook 复测。 |
 | 0.2.2-rc.3 | 官方 rc.3 隔离副本 86 条补丁 74 applied / 零漂移，二次应用幂等；真实 Host Loader 预设注册通过。Windows rc.3 未复测补丁。 |
 | 其它宿主 | 允许应用，但 `selfcheck` 会标"未验证"；先看 `diagnose` |
 | Node | ≥18（桌面版自带运行时即可）；**红队工具需 ≥22.5**（依赖 `node:sqlite`，低版本会在加载红队工具时失败） |

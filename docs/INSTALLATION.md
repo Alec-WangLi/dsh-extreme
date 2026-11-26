@@ -1,6 +1,6 @@
 # 安装、升级与故障排查
 
-当前版本 **1.7.21**。面向用户与协助安装的 Agent。支持的安装器环境：Linux CLI/Web；macOS Desktop；Windows 11 的 PowerShell 5.1/7。完整 Windows 宿主补丁及界面验收与安装器测试分开，不能因安装通过就宣称全部功能正常。
+当前版本 **1.7.22**（`dsh-extreme`，旧名 `dsh-purge-community` / `dsh-purge` 保留为迁移别名）。面向用户与协助安装的 Agent。支持的安装器环境：Linux CLI/Web；macOS Desktop；Windows 11 的 PowerShell 5.1/7。完整 Windows 宿主补丁及界面验收与安装器测试分开，不能因安装通过就宣称全部功能正常。
 
 ## 安装前
 
@@ -15,8 +15,8 @@
 
 | 你正在做什么 | DSH 字段 | 填什么 |
 | --- | --- | --- |
-| 在「发现」里找到插件 | 添加索引源 | `https://kingcharleslzy-ai.github.io/dsh-purge/index.json` |
-| 在「添加插件」里直接安装 | 包名或地址 | 打开[最新稳定发行](https://github.com/Alec-WangLi/dsh-purge/releases/latest)，复制 Assets 中带版本号的 `dsh-purge-community-版本号.tgz` 下载链接。本 fork 仓库当前为私有：需登录 GitHub 账号访问；对外分发时请转公开，或改用本地 `npm pack` 产物 |
+| 在「发现」里找到插件 | 添加索引源 | `https://kingcharleslzy-ai.github.io/dsh-purge/index.json`（上游社区索引，装的是上游 `dsh-purge-community`） |
+| 在「添加插件」里直接安装 | 包名或地址 | 打开[最新稳定发行](https://github.com/Alec-WangLi/dsh-extreme/releases/latest)，复制 Assets 中带版本号的 `dsh-extreme-版本号.tgz` 下载链接 |
 | 下载插件依赖（如 `yaml`） | 安装源（npm registry） | 通常保留原值；公共 npm 源是 `https://registry.npmjs.org/`，使用私有源的用户沿用有效配置 |
 
 从市场卡片点「安装」时，DSH 已经知道要装哪个插件，无需再填「包名或地址」。

@@ -1,14 +1,16 @@
 <div align="center">
 
-# dsh-purge Community
+# DSH-Extreme
 
 **Helping your AI assistant stay focused on your learning and hands-on work.**
 
-A self-hosted add-on for DeepSeek Harness (known in the community as a 破甲 / "jailbreak" plugin) · 86 host patches · 25 status layers
+A self-hosted add-on for DeepSeek Harness (known in the community as a 破甲 / "jailbreak" plugin) · 89 host patches · 25 status layers
 
-[![Release](https://img.shields.io/github/v/release/kingcharleslzy-ai/dsh-purge?label=release)](https://github.com/kingcharleslzy-ai/dsh-purge/releases)
+[![Release](https://img.shields.io/github/v/release/Alec-WangLi/dsh-extreme?label=release)](https://github.com/Alec-WangLi/dsh-extreme/releases)
 
-Current version 1.7.21 · targets **DSH Desktop 0.2.2-rc.5** (0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 also pass)
+Current version 1.7.22 · targets **DSH Desktop 0.2.2-rc.5** (0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 also pass)
+
+As of 1.7.22 this repository is independently maintained as **DSH-Extreme** (`dsh-extreme`), renamed from `dsh-purge-community`; installs, releases and the update channel all point at [Alec-WangLi/dsh-extreme](https://github.com/Alec-WangLi/dsh-extreme). The old names remain migration aliases.
 
 **Original project and author:** independently maintained from [dsh-purge by 小杨 / YuJunZhiXue](https://github.com/YuJunZhiXue/dsh-purge). The original repository is available again. Original attribution, copyright and the MIT license are retained; this community distribution is not an official upstream release.
 
@@ -52,23 +54,26 @@ Local learning, personal projects, automation experiments and maintenance work. 
 
 **Ask your agent** by copying this request:
 
-> Install the latest stable release of https://github.com/Alec-WangLi/dsh-purge into the DSH instance I use. Read the installation section in AGENTS.md first. If an older Purge is installed, migrate it in place and keep my settings. Report the installed version and profile. Leave the restart to me.
+> Install the latest stable release of https://github.com/Alec-WangLi/dsh-extreme into the DSH instance I use. Read the installation section in AGENTS.md first. If an older Purge is installed (dsh-purge-community / dsh-purge both count), migrate it in place and keep my settings. Report the installed version and profile. Leave the restart to me.
 
 **Install by hand in DSH Desktop**
 
 1. Open Plugins → Discover → Add index source. If Discover is missing, enable Custom plugin market under Plugins → Experimental plugins → More.
 2. Paste `https://kingcharleslzy-ai.github.io/dsh-purge/index.json`, save, and select **dsh-purge Community**.
+
+   **Note:** the community index installs the upstream `dsh-purge-community`, not this repository's DSH-Extreme. To install DSH-Extreme use the official CLI command below or the community installer; an existing upstream install migrates in place.
+
 3. Verify the repository is `kingcharleslzy-ai/dsh-purge`, click Install, then check the version in the installed plugins list.
 
 Catalog maintainers can synchronize versioned install targets from the [community index](https://kingcharleslzy-ai.github.io/dsh-purge/index.json). Match the package name and repository, and keep the version and commit from the same entry.
 
-Leave the npm registry at its working value. If pnpm requests `github.com/…/yaml` and gets a 404, open Add plugin, paste the versioned TGZ link from the [latest stable release](https://github.com/Alec-WangLi/dsh-purge/releases/latest) into the package field, select the official npm registry (or your working private registry), and retry.
+Leave the npm registry at its working value. If pnpm requests `github.com/…/yaml` and gets a 404, open Add plugin, paste the versioned TGZ link from the [latest stable release](https://github.com/Alec-WangLi/dsh-extreme/releases/latest) into the package field, select the official npm registry (or your working private registry), and retry.
 
 - Existing legacy Purge or standalone panel installations: use the community installer below for an in-place migration that preserves settings.
 - CLI/Web users who already have `dsh` on PATH and use the `web` profile can use the official command below. Desktop users should not download another npx host to install into their existing desktop profile.
 
 ```sh
-dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
+dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-extreme/releases/download/v1.7.22/dsh-extreme-1.7.22.tgz"
 ```
 
 Use the actual instance's profile and `DSH_HOME`. This project distributes via GitHub; do not substitute bare npm package names. The official command does not run our extra Release SHA256 check, migration snapshot or rollback wrapper.
@@ -89,7 +94,7 @@ A full page in the left sidebar: one line of state at the top, "Apply" as the pr
 
 ## Updates
 
-1.7.21 adds DSH Desktop **0.2.2-rc.5** to the compatibility matrix: an offline audit of the official rc.3/rc.5 trees shows all 88 patches byte-equivalent with zero new drift — no anchor changes needed. See the [audit report](drift-2026-11-26.md) and the [release notes](https://github.com/Alec-WangLi/dsh-purge/releases/tag/v1.7.21).
+1.7.22 renames this distribution to **DSH-Extreme** (`dsh-extreme`) and moves installs, releases and the update channel to [Alec-WangLi/dsh-extreme](https://github.com/Alec-WangLi/dsh-extreme); old names remain migration aliases. DSH Desktop **0.2.2-rc.5** compatibility comes from an offline audit of the official rc.3/rc.5 trees: all 88 pre-existing patches byte-equivalent with zero new drift, plus the new #97 rename migration anchor. See the [audit report](drift-2026-11-26.md) and the [release notes](https://github.com/Alec-WangLi/dsh-extreme/releases/tag/v1.7.22).
 
 Two separate preferences (check / install), default check-only every six hours. Installing never restarts the app — you decide when to reopen it.
 
@@ -97,7 +102,7 @@ Two separate preferences (check / install), default check-only every six hours. 
 
 On DSH 0.2.2-rc.2 the 86 patches apply as 74 applied / 0 drift and selfcheck is ok on macOS; bypass gates and the minified rewind anchors were verified there. Windows coverage for this host build is limited to preset cards and startup diagnostics.
 
-Plugin `dsh-purge-community` 1.7.20 · verified on DSH Desktop 0.2.2-rc.3 / 0.2.2-rc.2 / 0.2.2-rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 · Node ≥ 18.
+Plugin `dsh-extreme` 1.7.22 · verified on DSH Desktop 0.2.2-rc.5 / 0.2.2-rc.3 / 0.2.2-rc.2 / 0.2.2-rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 · Node ≥ 18.
 
 ## Troubleshooting
 

@@ -306,7 +306,7 @@ test("startup and maintenance report the same mixed versions in a desktop-hosted
     assert.equal(compatibility.prompt_version, "0.2.1-rc.2");
     assert.equal(compatibility.qualified, false);
     assert.ok(warnings.mock.calls.some(({ arguments: args }) =>
-      args[0] === `[dsh-purge-community] ${compatibility.message}`));
+      args[0] === `[dsh-extreme] ${compatibility.message}`));
   } finally {
     await dispose();
   }

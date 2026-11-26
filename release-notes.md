@@ -1,3 +1,11 @@
+# 1.7.22
+
+- 更名：包名 `dsh-purge-community` → **`dsh-extreme`**（DSH-Extreme），安装、发行与更新通道全部改走本仓库 [Alec-WangLi/dsh-extreme](https://github.com/Alec-WangLi/dsh-extreme)（`SOURCE_REPO` 随迁，旧上游名进 `LEGACY_REPOSITORIES` 白名单）。
+- 旧名 `dsh-purge-community` / `dsh-purge` 保留为迁移别名：`installed-package.js` 别名受理、跨名 `migrate` 自动清理旧 dependency 键（旧 node_modules 保留供 rollback）、`rollback` 名单含新名。
+- 新增宿主补丁 **#97**：把已打进旧版的 #45 官方更新 handoff 候选包列表迁移为 `["dsh-extreme","dsh-purge-community","dsh-purge"]`（silentWhenMissing，pristine 宿主静默跳过）；CI 驱动同步改为 #45+#97 串行应用并以 `dsh-extreme` 为候选。
+- bootstrap 安装器、install.sh/ps1、市场/指令/更新通道运行时校验、README/AGENTS/安装与维护文档全部切到新仓新名；README 补丁计数更正为 89 条。
+- 红队工具命名空间 `dsh-purge-community/redteam/tools`、CLI 简称 `purge-community`、`~/.dsh/dsh-purge-community/` 状态目录与历史署名按兼容不变量原样保留。
+
 # 1.7.21
 
 - DSH Desktop **0.2.2-rc.5** 收进兼容矩阵（`dshReleases`、`QUALIFIED_HOST_VERSIONS`、AGENTS.md/README 声明同步）。

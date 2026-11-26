@@ -1,17 +1,17 @@
 <div align="center">
 
-# dsh-purge Community
+# DSH-Extreme
 
 **让 AI 更专注地辅助你的学习与动手实验。**
 
-给 DeepSeek Harness 的自托管控件（俗称「破甲」插件）· 86 条宿主补丁 · 25 层状态自检 · 左侧栏整页设置
+给 DeepSeek Harness 的自托管控件（俗称「破甲」插件）· 89 条宿主补丁 · 25 层状态自检 · 左侧栏整页设置
 
-[![Release](https://img.shields.io/github/v/release/kingcharleslzy-ai/dsh-purge?label=release)](https://github.com/kingcharleslzy-ai/dsh-purge/releases)
-[![Checks](https://github.com/kingcharleslzy-ai/dsh-purge/actions/workflows/community.yml/badge.svg)](https://github.com/kingcharleslzy-ai/dsh-purge/actions/workflows/community.yml)
+[![Release](https://img.shields.io/github/v/release/Alec-WangLi/dsh-extreme?label=release)](https://github.com/Alec-WangLi/dsh-extreme/releases)
+[![Checks](https://img.shields.io/github/workflows/Alec-WangLi/dsh-extreme/community.yml/badge.svg)](https://github.com/Alec-WangLi/dsh-extreme/actions/workflows/community.yml)
 
-当前版本 **1.7.21** · 适配 **DSH Desktop 0.2.2-rc.5**（0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 同样通过） · [English](docs/README.en.md)
+当前版本 **1.7.22** · 适配 **DSH Desktop 0.2.2-rc.5**（0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 同样通过） · [English](docs/README.en.md)
 
-1.7.21 把 DSH Desktop **0.2.2-rc.5** 收进兼容矩阵：官方 rc.3/rc.5 双树离线审计逐补丁等价、零新增漂移，锚点无需改动（[审计报告](docs/drift-2026-11-26.md)、[发行说明](https://github.com/Alec-WangLi/dsh-purge/releases/tag/v1.7.21)）。
+1.7.22 起本仓库独立为 **DSH-Extreme**（`dsh-extreme`）：更名自 `dsh-purge-community`，安装、发行与更新通道全部走本仓库 [Alec-WangLi/dsh-extreme](https://github.com/Alec-WangLi/dsh-extreme)。DSH Desktop **0.2.2-rc.5** 兼容基于官方 rc.3/rc.5 双树离线审计逐补丁等价、零新增漂移（[审计报告](docs/drift-2026-11-26.md)、[发行说明](https://github.com/Alec-WangLi/dsh-extreme/releases/tag/v1.7.22)）。旧名 `dsh-purge-community` 与 `dsh-purge` 保留为迁移别名，旧安装可原地迁移。
 
 **原项目与作者**：小杨 / YuJunZhiXue 是历史上游 dsh-purge 的作者署名。本仓库独立维护社区版，保留上游版权和 MIT 许可证。历史署名不代表对当前同名 GitHub 账号身份的核实。详见[署名记录](NOTICE.md)与[许可证](LICENSE)。
 
@@ -31,7 +31,7 @@
 
 ## 它是什么
 
-dsh-purge Community 是一个跑在你自己机器上的 Harness 附加组件。它把日常使用里最消耗注意力的几件事收敛到一处：
+DSH-Extreme 是一个跑在你自己机器上的 Harness 附加组件。它把日常使用里最消耗注意力的几件事收敛到一处：
 
 - **看清楚状态**：安装、补丁、注入到底有没有就绪，一条命令或一屏面板给结论；
 - **少一些往返**：把反复出现的确认与打断，收敛成一次设置；
@@ -71,9 +71,11 @@ dsh-purge Community 是一个跑在你自己机器上的 Harness 附加组件。
 
 **让 AI 安装**，把下面这句话发给能操作本机的 Agent：
 
-> 帮我把 https://github.com/Alec-WangLi/dsh-purge 的最新稳定版装到我正在用的 DSH。先读仓库 AGENTS.md 的安装章节，检查有没有旧版，有就保留设置原地迁移。装好告诉我实际版本和 profile，重启由我自己操作。
+> 帮我把 https://github.com/Alec-WangLi/dsh-extreme 的最新稳定版装到我正在用的 DSH。先读仓库 AGENTS.md 的安装章节，检查有没有旧版（dsh-purge-community / dsh-purge 也算），有就保留设置原地迁移。装好告诉我实际版本和 profile，重启由我自己操作。
 
-### 方式一：DSH 官方界面（首次安装）
+### 方式一：DSH 官方界面（上游社区版）
+
+官方市场索引由上游社区维护，安装的是**上游 `dsh-purge-community`**，不是本仓库的 DSH-Extreme。要装 DSH-Extreme 请用下面的方式二或方式三；已装上游版时方式三会原地迁移到本仓库发行。市场索引原样保留供参考：
 
 1. 打开 DSH 的「插件 → 发现 → 添加索引源」。如果没有「发现」，先到「插件 → 实验性插件 → 更多」启用「自定义插件市场」。
 2. 在「添加索引源」粘贴这一行，保存后找到 **dsh-purge Community**。
@@ -95,10 +97,10 @@ dsh-purge Community 是一个跑在你自己机器上的 Harness 附加组件。
 下面命令适用于**已经安装 `dsh` 命令、且使用 `web` profile 的 CLI/Web 用户**，在 macOS/Linux 终端或 Windows PowerShell 中运行。桌面版用户优先用上面的界面；不要为了安装插件再用 `npx` 下载另一套宿主。
 
 ```sh
-dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
+dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-extreme/releases/download/v1.7.22/dsh-extreme-1.7.22.tgz"
 ```
 
-`web` 必须与实际启动的 profile 一致；自定义数据目录需要沿用该实例的 `DSH_HOME`。命令使用本次发行的固定版本 URL；不是 `npm install -g`，也不是安装裸 npm 包名。本项目通过 GitHub 发行，**不要替换成 `add dsh-purge` 或 `add dsh-purge-community`**。官方 CLI 的安装不会额外运行我们安装器的 Release SHA256 比对及迁移快照；需要这些功能时选方式三。[官方 CLI 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.zh.md)
+`web` 必须与实际启动的 profile 一致；自定义数据目录需要沿用该实例的 `DSH_HOME`。命令使用本次发行的固定版本 URL；不是 `npm install -g`，也不是安装裸 npm 包名。本项目通过 GitHub 发行，**不要替换成 `add dsh-purge-community` 或 `add dsh-purge`**（旧名在新发行里不再是合法安装目标）。官方 CLI 的安装不会额外运行我们安装器的 Release SHA256 比对及迁移快照；需要这些功能时选方式三。[官方 CLI 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.zh.md)
 
 ### 方式三：社区安装器（备份、旧版迁移、恢复）
 
@@ -110,7 +112,7 @@ dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-purge/releases/
 
 ```sh
 PURGE_INSTALL_DIR="$(mktemp -d)"
-curl -fSL --connect-timeout 20 --max-time 90 "https://raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/scripts/install.sh" -o "$PURGE_INSTALL_DIR/install.sh"
+curl -fSL --connect-timeout 20 --max-time 90 "https://raw.githubusercontent.com/Alec-WangLi/dsh-extreme/master/scripts/install.sh" -o "$PURGE_INSTALL_DIR/install.sh"
 sh "$PURGE_INSTALL_DIR/install.sh" --dry-run
 ```
 
@@ -128,7 +130,7 @@ sh "$PURGE_INSTALL_DIR/install.sh"
 
 ```powershell
 $PurgeInstaller = Join-Path $env:TEMP ('purge-install-' + [guid]::NewGuid().ToString('N') + '.ps1')
-Invoke-WebRequest -UseBasicParsing -TimeoutSec 90 -Uri 'https://raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/scripts/install.ps1' -OutFile $PurgeInstaller
+Invoke-WebRequest -UseBasicParsing -TimeoutSec 90 -Uri 'https://raw.githubusercontent.com/Alec-WangLi/dsh-extreme/master/scripts/install.ps1' -OutFile $PurgeInstaller
 powershell -NoProfile -ExecutionPolicy Bypass -File "$PurgeInstaller" -DryRun
 ```
 
@@ -146,7 +148,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$PurgeInstaller"
 
 ```sh
 PURGE_INSTALL_DIR="$(mktemp -d)"
-curl -fSL --connect-timeout 20 --max-time 90 "https://raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/scripts/install.sh" -o "$PURGE_INSTALL_DIR/install.sh"
+curl -fSL --connect-timeout 20 --max-time 90 "https://raw.githubusercontent.com/Alec-WangLi/dsh-extreme/master/scripts/install.sh" -o "$PURGE_INSTALL_DIR/install.sh"
 sh "$PURGE_INSTALL_DIR/install.sh" --dry-run
 ```
 
@@ -214,9 +216,9 @@ Web 面板默认接受回环地址和宿主配置的监听地址。通过自有�
 
 | 组件 | 值 |
 | --- | --- |
-| 插件 | `dsh-purge-community` 1.7.21 |
+| 插件 | `dsh-extreme` 1.7.22 |
 | 已验证宿主 | DSH Desktop 0.2.2-rc.5 / 0.2.2-rc.3 / 0.2.2-rc.2 / 0.2.2-rc.1 / 0.2.1-rc.1 / 0.2.1-rc.2 / 0.2.1-rc.3 / 0.2.1-rc.5 |
-| 0.2.2-rc.5 | 官方 rc.3/rc.5 双树离线审计：88 条补丁逐行等价、零新增漂移（[审计报告](docs/drift-2026-11-26.md)）；live 真机验收待升级当天复测。 |
+| 0.2.2-rc.5 | 官方 rc.3/rc.5 双树离线审计：88 条存量补丁逐行等价、零新增漂移，另加 #97 改名迁移锚（[审计报告](docs/drift-2026-11-26.md)）；live 真机验收待升级当天复测。 |
 | 0.2.2-rc.2 | 补丁 74 applied / 零漂移，自检与破甲/回退回归在 macOS 通过；Windows 仅验证预设卡片与启动诊断，未复测补丁。 |
 | 其它宿主 | 允许安装，自检会标「未验证」；先看 `diagnose` |
 | Node | ≥18（桌面版自带运行时即可）；红队工具需 ≥22.5（`node:sqlite`） |
@@ -311,4 +313,4 @@ npm run smoke            # 发行包冒烟
 
 ### DSH Store 收录信息
 
-DSH Store 申请必须填写 **Plugin path：`.`**，安装根目录的 `dsh-purge-community`；不要留空或选独立面板包。逐版本兼容声明已放入 manifest，未验证版本保持 `unknown`。元数据修正不等于市场已批准安装；[路径、兼容证据和收录边界](docs/DSH-STORE.md)。
+DSH Store 申请必须填写 **Plugin path：`.`**，安装根目录的 `dsh-extreme`；不要留空或选独立面板包。逐版本兼容声明已放入 manifest，未验证版本保持 `unknown`。元数据修正不等于市场已批准安装；[路径、兼容证据和收录边界](docs/DSH-STORE.md)。

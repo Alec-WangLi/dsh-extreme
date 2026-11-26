@@ -46,10 +46,10 @@ const run = (exe, args, env, label) => {
 };
 run(process.platform === 'win32' ? 'tar.exe' : 'tar', ['-xzf',archive,'-C',temp],process.env,'unpack');
 const pkg = JSON.parse(fs.readFileSync(path.join(temp,'package/package.json')));
-const releaseURL = `https://github.com/kingcharleslzy-ai/dsh-purge/releases/download/v${pkg.version}/dsh-purge-community-${pkg.version}.tgz`;
+const releaseURL = `https://github.com/Alec-WangLi/dsh-extreme/releases/download/v${pkg.version}/dsh-extreme-${pkg.version}.tgz`;
 const ext = process.platform === 'win32' ? 'ps1' : 'sh';
 const script = path.join(temp,`install.${ext}`);
-const response = await fetch(`https://raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/scripts/install.${ext}`, {signal:AbortSignal.timeout(90000)});
+const response = await fetch(`https://raw.githubusercontent.com/Alec-WangLi/dsh-extreme/master/scripts/install.${ext}`, {signal:AbortSignal.timeout(90000)});
 assert(response.ok, 'Installer download must succeed'); fs.writeFileSync(script,await response.text());
 const cliScript = path.join(temp,'package/bin/community.js');
 const reports = [];
@@ -92,9 +92,9 @@ for (const scenario of ['official-first-install','community-first-install','lega
     assert.deepEqual(fs.readFileSync(path.join(profile,'package.json')),before);
     install = wrapper(false);
   }
-  assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'node_modules/dsh-purge-community/package.json'))).version,pkg.version);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'node_modules/dsh-extreme/package.json'))).version,pkg.version);
   const bundles = JSON.parse(fs.readFileSync(path.join(profile,'package.json'))).dsh.profile.bundles;
-  assert(bundles.includes('dsh-purge-community')); assert(!bundles.includes('dsh-purge'));
+  assert(bundles.includes('dsh-extreme')); assert(!bundles.includes('dsh-purge'));
   preserve();
   // Exercise documented status and rollback with actual CLI, never a global bin assumption.
   const status = JSON.parse(run(runtime,[cliScript,'status'],env,label('status')));
@@ -113,7 +113,7 @@ for (const scenario of ['official-first-install','community-first-install','lega
     const back = JSON.parse(run(runtime,[cliScript,'backup'],env,label('backup')));
     fs.appendFileSync(patch,'\n# user edit after backup\n');
     run(runtime,[cliScript,'rollback',back.id],env,label('rollback'));
-    assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'node_modules/dsh-purge-community/package.json'))).version,pkg.version);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(profile,'node_modules/dsh-extreme/package.json'))).version,pkg.version);
     assert.equal(fs.readFileSync(patch,'utf8'),original+'\n# user edit after backup\n'); preserve();
   }
   reports.push({scenario,version:pkg.version,settingsPreserved:true,rollback:scenario!=='official-first-install'});

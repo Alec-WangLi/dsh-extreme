@@ -34,7 +34,7 @@ if (notesFirst !== `# ${version}`) {
 if (!readme.includes(`**${version}**`)) {
   problems.push(`README.md 首屏缺少版本号 **${version}**`);
 }
-if (!readme.includes("raw.githubusercontent.com/kingcharleslzy-ai/dsh-purge/master/scripts/install.sh")) {
+if (!readme.includes("raw.githubusercontent.com/Alec-WangLi/dsh-extreme/master/scripts/install.sh")) {
   problems.push("README.md 缺少安装器下载命令");
 }
 if (!readmeEn.includes(`Current version ${version}`)) {
@@ -43,7 +43,7 @@ if (!readmeEn.includes(`Current version ${version}`)) {
 if (!agents.includes(`当前版本：**${version}**`)) {
   problems.push(`AGENTS.md 缺少 "当前版本：**${version}**"`);
 }
-if (!agents.includes(`\`dsh-purge-community\` ${version}`)) {
+if (!agents.includes(`\`dsh-extreme\` ${version}`)) {
   problems.push(`AGENTS.md §9 版本表未同步到 ${version}`);
 }
 const hostLine = readme.match(/适配 \*\*DSH Desktop ([0-9a-z.\-]+)\*\*/i);
@@ -52,7 +52,7 @@ if (!hostLine) problems.push("README.md 缺少「适配 DSH Desktop …」的版
 // Copyable release commands must move with the package version, not retain an old TGZ.
 for (const file of ["README.md", "docs/README.en.md"]) {
   const doc = read(file);
-  const links = [...doc.matchAll(/releases\/download\/v([0-9.]+)\/dsh-purge-community-([0-9.]+)\.tgz/g)];
+  const links = [...doc.matchAll(/releases\/download\/v([0-9.]+)\/dsh-extreme-([0-9.]+)\.tgz/g)];
   if (!links.length) problems.push(`${file} 缺少固定版本的官方 CLI 安装来源`);
   for (const [, tag, archive] of links) if (tag !== version || archive !== version)
     problems.push(`${file} CLI 安装链接版本必须为 ${version}`);

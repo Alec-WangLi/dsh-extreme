@@ -328,8 +328,8 @@ test("release checksum failure stops before installation", async () => {
       installRelease(f.manager, {
         ref: "v1.2.0",
         version: "1.2.0",
-        asset: "https://github.com/kingcharleslzy-ai/dsh-purge/releases/download/v1.2.0/dsh-purge-community-1.2.0.tgz",
-        sums: "https://github.com/kingcharleslzy-ai/dsh-purge/releases/download/v1.2.0/SHA256SUMS.txt",
+        asset: "https://github.com/Alec-WangLi/dsh-extreme/releases/download/v1.2.0/dsh-extreme-1.2.0.tgz",
+        sums: "https://github.com/Alec-WangLi/dsh-extreme/releases/download/v1.2.0/SHA256SUMS.txt",
       }, globalThis.fetch),
       /SHA256/,
     );
@@ -649,4 +649,26 @@ test("an installer can initialize a fresh profile manifest", async t => {
   };
   await fixture.manager.install(fixture.candidate);
   assert.deepEqual(JSON.parse(fs.readFileSync(manifest)).dsh.profile.bundles, [PACKAGE]);
+});
+
+test("cross-name upgrade from dsh-purge-community swaps the dependency key and keeps old files for rollback", async t => {
+  const f = setup();
+  t.after(f.close);
+  const legacy = "dsh-purge-community";
+  const manifest = path.join(f.profile, "package.json");
+  const legacyDir = path.join(f.profile, "node_modules", legacy);
+  fs.mkdirSync(legacyDir, { recursive: true });
+  fs.writeFileSync(path.join(legacyDir, "package.json"), JSON.stringify({ name: legacy, version: "1.7.21" }));
+  const prior = JSON.parse(fs.readFileSync(manifest));
+  delete prior.dependencies[PACKAGE];
+  prior.dependencies[legacy] = "file:original";
+  prior.dsh.profile.bundles = [legacy, "unrelated-plugin"];
+  fs.writeFileSync(manifest, JSON.stringify(prior, null, 2));
+  await f.manager.install(f.candidate);
+  const after = JSON.parse(fs.readFileSync(manifest, "utf8"));
+  assert.equal(after.dependencies[legacy], undefined, "legacy dependency key must be removed after a verified install");
+  assert.equal(typeof after.dependencies[PACKAGE], "string", "new package key must be present");
+  assert.deepEqual(after.dsh.profile.bundles, ["unrelated-plugin", PACKAGE], "bundles gate switches to the new name");
+  assert.equal(fs.existsSync(legacyDir), true, "legacy package files remain on disk for rollback");
+  assert.equal(fs.existsSync(path.join(f.profile, "node_modules", PACKAGE)), true);
 });

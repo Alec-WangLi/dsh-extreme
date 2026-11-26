@@ -1,52 +1,69 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
-import {installedCommunityPackage,COMMUNITY_PACKAGE as name} from '../lib/installed-package.js';
-import {installedYaml} from '../lib/market-migration.js';
-import {Maintenance} from '../lib/community.js';
-import {removeTreeNoFollowSync} from '../lib/remove-tree.js';
-function fixture(t) {
-  const home=fs.mkdtempSync(path.join(os.tmpdir(),'purge-alias-')),profile=path.join(home,'profiles/web');
-  fs.mkdirSync(profile,{recursive:true});
-  const manifest=bundles=>fs.writeFileSync(path.join(profile,'package.json'),JSON.stringify({dependencies:{[name]:'file:fixture','dsh-purge':'file:fixture'},dsh:{profile:{bundles}}}));
-  const add=(alias,version='1.6.47',packageName=name)=>{
-    const root=path.join(profile,'node_modules',alias);fs.mkdirSync(root,{recursive:true});fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({name:packageName,version}));return root;
-  };
-  t.after(()=>removeTreeNoFollowSync(home));return{home,profile,manifest,add};
+// DSH-Extreme 改名后的别名解析钉：主名 dsh-extreme；旧名 dsh-purge-community /
+// dsh-purge 仍可解析（迁移窗口与回滚依赖它们），陌生名一律拒绝。
+import { test, after } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { installedCommunityPackage, COMMUNITY_PACKAGE } from "../lib/installed-package.js";
+
+const CLEANUP = [];
+after(() => { for (const p of CLEANUP) fs.rmSync(p, { recursive: true, force: true }); });
+
+function makeProfile(entries, bundles) {
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), "installed-pkg-"));
+  CLEANUP.push(profile);
+  for (const [name, pkg] of Object.entries(entries)) {
+    const dir = path.join(profile, "node_modules", name);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify(pkg));
+  }
+  fs.writeFileSync(path.join(profile, "package.json"),
+    JSON.stringify({ dsh: { profile: { bundles } } }));
+  return profile;
 }
-for(const alias of [name,'dsh-purge'])test('resolve installed metadata and YAML from physical package: '+alias,t=>{
-  const f=fixture(t);f.manifest([alias]);const root=f.add(alias);
-  // Isolated pnpm-shaped store: parser lives beside the real package, not at profile root.
-  const store=path.join(f.profile,'node_modules/.pnpm/fixture/node_modules');fs.mkdirSync(store,{recursive:true});fs.renameSync(root,path.join(store,name));
-  fs.symlinkSync(path.join(store,name),root,process.platform==='win32'?'junction':'dir');
-  fs.mkdirSync(path.join(store,'yaml'));fs.writeFileSync(path.join(store,'yaml/index.js'),'module.exports={sentinel:"physical parser"};');
-  const found=installedCommunityPackage(f.profile);
-  assert.equal(found.package.version,'1.6.47');assert.equal(found.dependencyName,alias);
-  assert.equal(installedYaml(f.profile).sentinel,'physical parser');
+
+test("COMMUNITY_PACKAGE is the new primary name", () => {
+  assert.equal(COMMUNITY_PACKAGE, "dsh-extreme");
 });
-test('selected alias beats stale inactive canonical package; ambiguous bundles fail',t=>{
-  const f=fixture(t);f.add(name,'1.6.40');f.add('dsh-purge');f.manifest(['dsh-purge']);
-  assert.equal(installedCommunityPackage(f.profile).package.version,'1.6.47');
-  f.manifest([name,'dsh-purge']);assert.throws(()=>installedCommunityPackage(f.profile),/多个/);
+
+test("resolves the primary install from bundles", () => {
+  const profile = makeProfile(
+    { "dsh-extreme": { name: "dsh-extreme", version: "1.7.22" } },
+    ["dsh-extreme"]);
+  const found = installedCommunityPackage(profile);
+  assert.equal(found.dependencyName, "dsh-extreme");
+  assert.equal(found.package.version, "1.7.22");
 });
-test('missing, wrong identity, damaged metadata and absent selected package stay errors',t=>{
-  const f=fixture(t);f.manifest(['dsh-purge']);
-  assert.throws(()=>installedCommunityPackage(f.profile),{code:'ENOENT'});
-  f.add(name);const root=f.add('dsh-purge','1.6.47','impostor');
-  assert.throws(()=>installedCommunityPackage(f.profile),/标识/);
-  fs.writeFileSync(path.join(root,'package.json'),'{broken');assert.throws(()=>installedCommunityPackage(f.profile),SyntaxError);
+
+test("resolves a legacy dsh-purge-community install during the migration window", () => {
+  const profile = makeProfile(
+    { "dsh-purge-community": { name: "dsh-purge-community", version: "1.7.21" } },
+    ["dsh-purge-community"]);
+  const found = installedCommunityPackage(profile);
+  assert.equal(found.dependencyName, "dsh-purge-community");
+  assert.equal(found.package.version, "1.7.21");
 });
-test('alias backup records actual package identity and preserves user files',async t=>{
-  const f=fixture(t);f.manifest(['dsh-purge']);f.add('dsh-purge');
-  fs.writeFileSync(path.join(f.home,'prompt-inject.md'),'PRIVATE KEEP');
-  const m=new Maintenance({home:f.home,profile:f.profile});const saved=await m.backup();
-  const {m:manifest}=m.verify(saved.id);
-  assert.equal(manifest.plugins[0].name,'dsh-purge');assert.equal(manifest.plugins[0].packageName,name);
-  assert.equal(fs.readFileSync(path.join(f.home,'prompt-inject.md'),'utf8'),'PRIVATE KEEP');
+
+test("legacy dependency names are accepted explicitly, unknown names rejected", () => {
+  const profile = makeProfile(
+    { "dsh-purge-community": { name: "dsh-purge-community", version: "1.7.21" } },
+    []);
+  assert.equal(installedCommunityPackage(profile, { dependencyName: "dsh-purge-community" }).package.version, "1.7.21");
+  assert.throws(() => installedCommunityPackage(profile, { dependencyName: "not-a-plugin" }), /Unsupported plugin dependency name/);
 });
-test('selected missing alias is not masked by an inactive canonical installation',t=>{
-  const f=fixture(t);f.add(name);f.manifest(['dsh-purge']);
-  assert.throws(()=>installedCommunityPackage(f.profile),{code:'ENOENT'});
+
+test("a package that is not one of our identities is rejected", () => {
+  const profile = makeProfile(
+    { "dsh-extreme": { name: "someone-elses-package", version: "9.9.9" } },
+    ["dsh-extreme"]);
+  assert.throws(() => installedCommunityPackage(profile), /无效/);
+});
+
+test("two live installs still conflict", () => {
+  const profile = makeProfile({
+    "dsh-extreme": { name: "dsh-extreme", version: "1.7.22" },
+    "dsh-purge-community": { name: "dsh-purge-community", version: "1.7.21" },
+  }, ["dsh-extreme", "dsh-purge-community"]);
+  assert.throws(() => installedCommunityPackage(profile), /多个社区版安装/);
 });

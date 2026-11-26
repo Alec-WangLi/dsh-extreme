@@ -8,6 +8,7 @@ import { handoffOfficialInstaller } from "../lib/official-installer.mjs";
 import { NEW_TOOL_PATCHES } from "../lib/patches/new-tools.mjs";
 import { applyReplacementsToText } from "../lib/core/verify.mjs";
 const patch = NEW_TOOL_PATCHES.find(item => item.id === 45);
+const extremePatch = NEW_TOOL_PATCHES.find(item => item.id === 97);
 const nativeCall = "\t\t\t\tthis.updater.quitAndInstall(true, true);";
 const legacy = 'function dshPurgeHandoffDesktopUpdate(owner) {\n\towner.updater.quitAndInstall(true, true);\n}\nvar DesktopUpdateCoordinator = class {';
 test("native, previously modified and CRLF call sites migrate once", () => {
@@ -21,16 +22,29 @@ test("native, previously modified and CRLF call sites migrate once", () => {
   }
   assert.equal(applyReplacementsToText(nativeCall + "\n" + nativeCall, patch).hitMismatch.actual, 2);
 });
-test("both package names in both profiles can hand off, missing helper is reported before quitting", async t => {
+test("#97 migrates the #45 handoff candidate list to include dsh-extreme exactly once", () => {
+  const patched45 = applyReplacementsToText(nativeCall, patch).text;
+  assert.ok(patched45.includes('["dsh-purge-community", "dsh-purge"]'), "fixture must be the old-generation #45 product");
+  const migrated = applyReplacementsToText(patched45, extremePatch);
+  assert.equal(migrated.changed, true);
+  assert.ok(migrated.text.includes('["dsh-extreme", "dsh-purge-community", "dsh-purge"].map(pkg => join(home, "profiles", profile, "node_modules", pkg, "lib", "official-installer.mjs")))'));
+  assert.deepEqual(applyReplacementsToText(migrated.text, extremePatch), { text: migrated.text, changed: false });
+  // pristine hosts (no #45 product) stay untouched; CRLF variants migrate too.
+  assert.deepEqual(applyReplacementsToText(nativeCall, extremePatch), { text: nativeCall, changed: false });
+  const crlf = applyReplacementsToText(patched45.replaceAll("\n", "\r\n"), extremePatch);
+  assert.equal(crlf.changed, true);
+  assert.ok(crlf.text.includes('["dsh-extreme", "dsh-purge-community", "dsh-purge"]'));
+});
+test("all three package names in both profiles can hand off, missing helper is reported before quitting", async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "official-handoff-"));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
-  const fn = Object.getPrototypeOf(async function() {}).constructor("process", "join", "homedir", "existsSync", "app", applyReplacementsToText(nativeCall, patch).text);
+  const fn = Object.getPrototypeOf(async function() {}).constructor("process", "join", "homedir", "existsSync", "app", applyReplacementsToText(applyReplacementsToText(nativeCall, patch).text, extremePatch).text);
   let quits = 0;
   const app = { quit() { quits++; } };
   const inputs = [{ platform: "win32", execPath: "/test/exe", env: {DSH_HOME: root} }, path.join, os.homedir, fs.existsSync, app];
   await assert.rejects(fn.call({}, ...inputs), /找不到官方安装器/);
   for (const profile of ["desktop", "web"]) {
-    for (const pkg of ["dsh-purge-community", "dsh-purge"]) {
+    for (const pkg of ["dsh-extreme", "dsh-purge-community", "dsh-purge"]) {
       const dir = path.join(root, "profiles", profile, "node_modules", pkg, "lib");
       const file = path.join(dir, "official-installer.mjs");
       fs.mkdirSync(dir, { recursive: true });
@@ -41,7 +55,7 @@ test("both package names in both profiles can hand off, missing helper is report
       fs.unlinkSync(file);
     }
   }
-  assert.equal(quits, 4);
+  assert.equal(quits, 6);
 });
 test("reject stale or incomplete upstream installer metadata", async () => {
   const d = { file: path.resolve("setup.exe"), versionInfo: {version:"v1"}, fileInfo: {info:{sha512:"A".repeat(86)+"=="}} };

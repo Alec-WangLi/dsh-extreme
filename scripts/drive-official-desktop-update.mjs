@@ -24,11 +24,15 @@ if (disk.existsSync(unpacked)) {
   const start = 8 + archive.readUInt32LE(4) + Number(entry.offset);
   shell = archive.subarray(start, start + entry.size).toString("utf8");
 }
-const result = applyReplacementsToText(shell, NEW_TOOL_PATCHES.find(p => p.id === 45));
-if (!result.changed || result.hitMismatch) throw new Error("Unsupported official update coordinator");
-const match = /^var DesktopUpdateCoordinator = (class \{[\s\S]*?^\});/m.exec(result.text);
+let patched = shell;
+for (const id of [45, 97]) {
+  const result = applyReplacementsToText(patched, NEW_TOOL_PATCHES.find(p => p.id === id));
+  if (!result.changed || result.hitMismatch) throw new Error(`Unsupported official update coordinator (patch #${id})`);
+  patched = result.text;
+}
+const match = /^var DesktopUpdateCoordinator = (class \{[\s\S]*?^\});/m.exec(patched);
 if (!match) throw new Error("Missing desktop update coordinator");
-const pkgName = rc === "1" ? "dsh-purge" : "dsh-purge-community";
+const pkgName = rc === "1" ? "dsh-purge" : "dsh-extreme";
 const lib = path.join(home, "profiles", "desktop", "node_modules", pkgName, "lib");
 fs.mkdirSync(lib, { recursive: true });
 for (const file of ["official-installer.mjs", "official-installer.ps1", "official-installer-launch.jsw"]) {
