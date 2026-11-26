@@ -1,3 +1,9 @@
+# 1.7.21
+
+- DSH Desktop **0.2.2-rc.5** 收进兼容矩阵（`dshReleases`、`QUALIFIED_HOST_VERSIONS`、AGENTS.md/README 声明同步）。
+- 新增离线漂移审计三件套：`scripts/drift-audit.mjs`（双树逐补丁比对 + chained/layout-absent 证据归类，rc.3→rc.5 零漂移、exit 0）、`scripts/verify-clean-baseline.mjs`、`lib/patch-match.mjs`；报告见 `docs/drift-2026-11-26.md`。
+- 审计证明 1.7.20 锚点对 rc.5 无需改动，本版不改任何宿主补丁行为。
+
 # 1.7.20
 
 - 新增 `outcome=partial_refused`：先给一段公开信息/背景、再把请求推掉的回答，不再算成功。
