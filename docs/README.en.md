@@ -52,7 +52,7 @@ Local learning, personal projects, automation experiments and maintenance work. 
 
 **Ask your agent** by copying this request:
 
-> Install the latest stable release of https://github.com/kingcharleslzy-ai/dsh-purge into the DSH instance I use. Read the installation section in AGENTS.md first. If an older Purge is installed, migrate it in place and keep my settings. Report the installed version and profile. Leave the restart to me.
+> Install the latest stable release of https://github.com/Alec-WangLi/dsh-purge into the DSH instance I use. Read the installation section in AGENTS.md first. If an older Purge is installed, migrate it in place and keep my settings. Report the installed version and profile. Leave the restart to me.
 
 **Install by hand in DSH Desktop**
 
@@ -62,13 +62,13 @@ Local learning, personal projects, automation experiments and maintenance work. 
 
 Catalog maintainers can synchronize versioned install targets from the [community index](https://kingcharleslzy-ai.github.io/dsh-purge/index.json). Match the package name and repository, and keep the version and commit from the same entry.
 
-Leave the npm registry at its working value. If pnpm requests `github.com/…/yaml` and gets a 404, open Add plugin, paste the versioned TGZ link from the [latest stable release](https://github.com/kingcharleslzy-ai/dsh-purge/releases/latest) into the package field, select the official npm registry (or your working private registry), and retry.
+Leave the npm registry at its working value. If pnpm requests `github.com/…/yaml` and gets a 404, open Add plugin, paste the versioned TGZ link from the [latest stable release](https://github.com/Alec-WangLi/dsh-purge/releases/latest) into the package field, select the official npm registry (or your working private registry), and retry.
 
 - Existing legacy Purge or standalone panel installations: use the community installer below for an in-place migration that preserves settings.
 - CLI/Web users who already have `dsh` on PATH and use the `web` profile can use the official command below. Desktop users should not download another npx host to install into their existing desktop profile.
 
 ```sh
-dsh plugin --profile web add "https://github.com/kingcharleslzy-ai/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
+dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
 ```
 
 Use the actual instance's profile and `DSH_HOME`. This project distributes via GitHub; do not substitute bare npm package names. The official command does not run our extra Release SHA256 check, migration snapshot or rollback wrapper.
@@ -89,7 +89,7 @@ A full page in the left sidebar: one line of state at the top, "Apply" as the pr
 
 ## Updates
 
-1.7.21 adds DSH Desktop **0.2.2-rc.5** to the compatibility matrix: an offline audit of the official rc.3/rc.5 trees shows all 88 patches byte-equivalent with zero new drift — no anchor changes needed. See the [audit report](drift-2026-11-26.md) and the [release notes](https://github.com/kingcharleslzy-ai/dsh-purge/releases/tag/v1.7.21).
+1.7.21 adds DSH Desktop **0.2.2-rc.5** to the compatibility matrix: an offline audit of the official rc.3/rc.5 trees shows all 88 patches byte-equivalent with zero new drift — no anchor changes needed. See the [audit report](drift-2026-11-26.md) and the [release notes](https://github.com/Alec-WangLi/dsh-purge/releases/tag/v1.7.21).
 
 Two separate preferences (check / install), default check-only every six hours. Installing never restarts the app — you decide when to reopen it.
 

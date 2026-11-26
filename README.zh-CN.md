@@ -11,7 +11,7 @@
 
 当前版本 **1.7.21** · 适配 **DSH Desktop 0.2.2-rc.5**（0.2.2-rc.3 / rc.2 / rc.1 / 0.2.1-rc.1 / rc.2 / rc.3 / rc.5 同样通过） · [English](docs/README.en.md)
 
-1.7.21 把 DSH Desktop **0.2.2-rc.5** 收进兼容矩阵：官方 rc.3/rc.5 双树离线审计逐补丁等价、零新增漂移，锚点无需改动（[审计报告](docs/drift-2026-11-26.md)、[发行说明](https://github.com/kingcharleslzy-ai/dsh-purge/releases/tag/v1.7.21)）。
+1.7.21 把 DSH Desktop **0.2.2-rc.5** 收进兼容矩阵：官方 rc.3/rc.5 双树离线审计逐补丁等价、零新增漂移，锚点无需改动（[审计报告](docs/drift-2026-11-26.md)、[发行说明](https://github.com/Alec-WangLi/dsh-purge/releases/tag/v1.7.21)）。
 
 **原项目与作者**：小杨 / YuJunZhiXue 是历史上游 dsh-purge 的作者署名。本仓库独立维护社区版，保留上游版权和 MIT 许可证。历史署名不代表对当前同名 GitHub 账号身份的核实。详见[署名记录](NOTICE.md)与[许可证](LICENSE)。
 
@@ -71,7 +71,7 @@ dsh-purge Community 是一个跑在你自己机器上的 Harness 附加组件。
 
 **让 AI 安装**，把下面这句话发给能操作本机的 Agent：
 
-> 帮我把 https://github.com/kingcharleslzy-ai/dsh-purge 的最新稳定版装到我正在用的 DSH。先读仓库 AGENTS.md 的安装章节，检查有没有旧版，有就保留设置原地迁移。装好告诉我实际版本和 profile，重启由我自己操作。
+> 帮我把 https://github.com/Alec-WangLi/dsh-purge 的最新稳定版装到我正在用的 DSH。先读仓库 AGENTS.md 的安装章节，检查有没有旧版，有就保留设置原地迁移。装好告诉我实际版本和 profile，重启由我自己操作。
 
 ### 方式一：DSH 官方界面（首次安装）
 
@@ -95,7 +95,7 @@ dsh-purge Community 是一个跑在你自己机器上的 Harness 附加组件。
 下面命令适用于**已经安装 `dsh` 命令、且使用 `web` profile 的 CLI/Web 用户**，在 macOS/Linux 终端或 Windows PowerShell 中运行。桌面版用户优先用上面的界面；不要为了安装插件再用 `npx` 下载另一套宿主。
 
 ```sh
-dsh plugin --profile web add "https://github.com/kingcharleslzy-ai/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
+dsh plugin --profile web add "https://github.com/Alec-WangLi/dsh-purge/releases/download/v1.7.21/dsh-purge-community-1.7.21.tgz"
 ```
 
 `web` 必须与实际启动的 profile 一致；自定义数据目录需要沿用该实例的 `DSH_HOME`。命令使用本次发行的固定版本 URL；不是 `npm install -g`，也不是安装裸 npm 包名。本项目通过 GitHub 发行，**不要替换成 `add dsh-purge` 或 `add dsh-purge-community`**。官方 CLI 的安装不会额外运行我们安装器的 Release SHA256 比对及迁移快照；需要这些功能时选方式三。[官方 CLI 安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.zh.md)

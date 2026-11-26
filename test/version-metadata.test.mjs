@@ -47,9 +47,10 @@ test("README.md and README.zh-CN.md stay identical and carry 1.7.21 + rc.5", () 
   assert.equal(zh, readme);
   assert.ok(readme.includes("**1.7.21**"));
   assert.match(readme, /适配 \*\*DSH Desktop 0\.2\.2-rc\.5\*\*/);
-  const links = [...readme.matchAll(/releases\/download\/v([0-9.]+)\/dsh-purge-community-([0-9.]+)\.tgz/g)];
+  const links = [...readme.matchAll(/https:\/\/github\.com\/([^/]+)\/dsh-purge\/releases\/download\/v([0-9.]+)\/dsh-purge-community-([0-9.]+)\.tgz/g)];
   assert.ok(links.length > 0, "README must keep a pinned TGZ install source");
-  for (const [, tag, archive] of links) {
+  for (const [, owner, tag, archive] of links) {
+    assert.equal(owner, "Alec-WangLi", "install TGZ must come from the fork repo, not upstream");
     assert.equal(tag, "1.7.21");
     assert.equal(archive, "1.7.21");
   }
@@ -59,9 +60,10 @@ test("docs/README.en.md, INSTALLATION.md, MAINTENANCE.md declare 1.7.21", () => 
   const en = read("docs/README.en.md");
   assert.ok(en.includes("Current version 1.7.21"));
   assert.match(en, /targets \*\*DSH Desktop 0\.2\.2-rc\.5\*\*/);
-  const links = [...en.matchAll(/releases\/download\/v([0-9.]+)\/dsh-purge-community-([0-9.]+)\.tgz/g)];
+  const links = [...en.matchAll(/https:\/\/github\.com\/([^/]+)\/dsh-purge\/releases\/download\/v([0-9.]+)\/dsh-purge-community-([0-9.]+)\.tgz/g)];
   assert.ok(links.length > 0);
-  for (const [, tag, archive] of links) {
+  for (const [, owner, tag, archive] of links) {
+    assert.equal(owner, "Alec-WangLi", "install TGZ must come from the fork repo, not upstream");
     assert.equal(tag, "1.7.21");
     assert.equal(archive, "1.7.21");
   }
